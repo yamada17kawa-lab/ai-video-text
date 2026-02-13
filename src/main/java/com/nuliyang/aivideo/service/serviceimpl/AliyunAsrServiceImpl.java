@@ -148,8 +148,43 @@ public class AliyunAsrServiceImpl implements AsrService {
                 }
                 return objectMapper.writeValueAsString(resultMap);
 
+            }else if (taskStatus.equals("FAILED")) {
+                log.info("任务失败");
+                Map<String, String> resultMap = new HashMap<>();
+                resultMap.put("status", "FAILED");
+                resultMap.put("message", "任务失败");
+                //清除该任务
+                TaskIdStore.remove(taskId);
+                return objectMapper.writeValueAsString(resultMap);
+            }else if (taskStatus.equals("SUCCEEDED")) {
+                log.info("任务成功");
+                //解析返回数据，取出结果url
+                String transcriptionUrl = root2
+                        .path("output")
+                        .path("results")
+                        .path("transcription_url")
+                        .asString();
+                log.info("结果url: {}", transcriptionUrl);
+                Request request0 = new Request.Builder()
+                        .url(transcriptionUrl)
+                        .get()
+                        .build();
+                try (Response response0 = CLIENT.newCall(request0).execute()) {
+                    assert response0.body() != null;
+                    log.info("结果: {}", response0.body().string());
+                    //清除该任务
+                    TaskIdStore.remove(taskId);
+                    return response0.body().string();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
-            return result2;
+            log.info("未知任务状态");
+            Map<String, String> resultMap0 = new HashMap<>();
+            resultMap0.put("status", "UNKNOW");
+            resultMap0.put("message", "未知任务状态");
+            resultMap0.put("data", result2);
+            return objectMapper.writeValueAsString(resultMap0);
         }
     }
 
