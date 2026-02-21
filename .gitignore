@@ -85,10 +85,12 @@ log/
 
 # ==================== Spring Boot ====================
 spring-boot-*.log
-application-local.yml
-application-local.properties
-application-dev.yml
-application-dev.properties
+**/application-local.yml
+**/application-local.properties
+**/application-dev.yml
+**/application-dev.properties
+**/application-*.yml.bak
+**/application-*.properties.bak
 
 # ==================== Media & Large Files ====================
 media/
