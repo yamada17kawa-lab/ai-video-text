@@ -33,7 +33,7 @@ public class ToAudioController {
         try {
             String result = videoToStringService.videoToString(video, name);
             log.info("视频asr转换成功: {}",  result);
-            return Result.success("视频asr转换成功",  result);
+            return Result.success(  result);
         } catch (IOException | InterruptedException e) {
             log.error("视频转音频过程中发生未知异常");
             return Result.fail("处理失败，请稍后重试");
@@ -50,8 +50,8 @@ public class ToAudioController {
 
     @GetMapping("/getTask/{taskId}")
     public Result<String> getTask(@PathVariable String taskId) throws IOException {
-        String result = aliyunPendingService.asr(taskId);
-        return Result.success("查询成功", result);
+        aliyunPendingService.task(taskId);
+        return Result.success("查询成功");
     }
 
 

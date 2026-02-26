@@ -6,7 +6,7 @@ import java.io.IOException;
 public interface AsrService {
 
 
-    String asr(String wavFileUrl) throws IOException;
+    void asr(String wavFileUrl) throws IOException;
 
-
+    void task(String taskId) throws IOException;
 }

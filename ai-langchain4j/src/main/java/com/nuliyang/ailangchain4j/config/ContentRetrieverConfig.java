@@ -27,7 +27,7 @@ public class ContentRetrieverConfig {
                 .embeddingStore(embeddingStore)
                 .embeddingModel(embeddingModel)
                 .maxResults(5)
-                .minScore(0.75)
+                .minScore(0.5)
                 .build();
     }
 }

@@ -39,8 +39,9 @@ public class OpenAiAsrServiceImpl implements AsrService {
 
 
     @Override
-    public String asr(String wavFileUrl) throws IOException {
-        // ✅ 保留你的代理配置（未改动）
+    public void asr(String wavFileUrl) throws IOException {
+
+        //这里代理clash，根据自己的代理配置修改
         Proxy proxy = new Proxy(
                 Proxy.Type.HTTP,
                 new InetSocketAddress("127.0.0.1", 7890)
@@ -92,10 +93,6 @@ public class OpenAiAsrServiceImpl implements AsrService {
                     throw new RuntimeException("ASR 请求失败: " + response);
                 }
 
-                assert response.body() != null;
-                String result = response.body().string();
-                log.debug("ASR 响应长度: {} 字符", result.length());
-                return result;
             }
         } finally {
             // 4. 清理：主动删除（非 deleteOnExit），仍保留你原逻辑风格
@@ -103,6 +100,11 @@ public class OpenAiAsrServiceImpl implements AsrService {
                 log.warn("临时文件删除失败: {}", wavFile);
             }
         }
+    }
+
+    @Override
+    public void task(String taskId) throws IOException {
+
     }
 
 

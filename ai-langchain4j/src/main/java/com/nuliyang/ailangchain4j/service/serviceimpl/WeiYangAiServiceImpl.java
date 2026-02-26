@@ -16,6 +16,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -94,6 +95,8 @@ public class WeiYangAiServiceImpl implements weiYangAiService {
     }
 
 
+
+    @Async("asyncThreadBean")
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void weiYangAi(FileDto fileDto, String resourceId) throws IOException, SQLException {
@@ -133,10 +136,12 @@ public class WeiYangAiServiceImpl implements weiYangAiService {
 
         // 批量存储
         for (TextSegment segment : segments){
+            log.info("正在异步存储数据: {}", segment.text());
             float[] vector = qwenEmbeddingModel.embed(segment.text()).content().vector();
             Embedding embedding = Embedding.from( vector);
             embeddingStore.add(embedding, segment);
         }
+        log.info("异步存储数据完成");
     }
 
 

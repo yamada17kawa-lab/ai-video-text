@@ -1,10 +1,9 @@
-package com.nuliyang.aivideo.service.serviceimpl;
+package com.nuliyang.aivideo.service;
 
-
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nuliyang.aivideo.config.AliyunOssConfig;
 import com.nuliyang.aivideo.feign.AiFeign;
-import com.nuliyang.aivideo.service.AsrService;
 import com.nuliyang.aivideo.tools.RedisUtil;
 import com.nuliyang.common.dto.FileDto;
 import lombok.RequiredArgsConstructor;
@@ -16,20 +15,17 @@ import okhttp3.Response;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 
 @Slf4j
-@Service("aliyunPendingServiceImpl")
+@Service
 @RequiredArgsConstructor
-public class AliyunPendingServiceImpl implements AsrService {
+public class ProcessRedisTaskService {
 
 
     private final RedisUtil redisUtil;
@@ -42,21 +38,14 @@ public class AliyunPendingServiceImpl implements AsrService {
 
     private final ObjectMapper objectMapper;
 
+
     private static final OkHttpClient CLIENT = new OkHttpClient.Builder()
             .connectTimeout(Duration.ofSeconds(10))
             .readTimeout(Duration.ofSeconds(60))
             .writeTimeout(Duration.ofSeconds(60))
             .build();
 
-
-    @Override
-    public void asr(String wavFileUrl) throws IOException {
-    }
-
-
-
     @Async("asyncThreadBean")
-    @Override
     public void task(String taskId) throws IOException {
         String url = "https://dashscope.aliyuncs.com/api/v1/tasks/" + taskId;
 
@@ -84,7 +73,7 @@ public class AliyunPendingServiceImpl implements AsrService {
                 log.info("任务未开始，请稍后查询");
             } else if (taskStatus.equals("RUNNING")) {
                 log.info("任务正在运行，请稍后查询");
-                
+
             } else if (taskStatus.equals("FAILED")) {
                 log.info("任务失败");
             }else if (taskStatus.equals("SUCCEEDED")) {
@@ -131,5 +120,30 @@ public class AliyunPendingServiceImpl implements AsrService {
 
 
 
+    /**
+     * 每10秒执行一次，从Redis中获取一条数据并调用asr方法
+     */
+    @Scheduled(fixedRate = 10000)
+    public void processRedisTask() {
+        try {
+            // 获取Redis中的第一条数据
+            Map.Entry<String, Object> entry = redisUtil.getFirstEntry();
 
+            if (entry != null) {
+                String taskId = entry.getKey();
+                String fileName = (String) entry.getValue();
+
+                log.info("定时任务获取到任务: taskId={}, fileName={}", taskId, fileName);
+
+                // 调用asr方法处理任务
+                task(taskId);
+
+                log.info("定时任务处理完成: taskId={}", taskId);
+            } else {
+                log.debug("Redis中暂无待处理任务");
+            }
+        } catch (Exception e) {
+            log.error("定时任务执行失败", e);
+        }
+    }
 }

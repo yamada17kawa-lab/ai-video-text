@@ -11,6 +11,7 @@ import com.nuliyang.common.dto.FileDto;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -66,8 +67,9 @@ public class AliyunAsrServiceImpl implements AsrService {
 
 
 
+    @Async("asyncThreadBean")
     @Override
-    public String asr(String wavFileUrl) throws IOException {
+    public void asr(String wavFileUrl) throws IOException {
 
         ///////////将音频扔给ai进行asr处理////////////////
         String jsonBody = """
@@ -142,38 +144,24 @@ public class AliyunAsrServiceImpl implements AsrService {
                     .asText();
             if (taskStatus.equals("PENDING")){
                 log.info("任务未开始，请稍后查询");
-                Map<String, String> resultMap = new HashMap<>();
-                resultMap.put("status", "PENDING");
-                resultMap.put("message", "任务未开始，请稍后查询");
                 ////不存在则存入redis
                 if (!redisUtil.hasKey(taskId)){
                     //从线程中取出文件的自定义名字
                     String fileName = taskContextMap.get("fileName");
                     redisUtil.add(taskId, fileName);
                 }
-                return objectMapper.writeValueAsString(resultMap);
 
             } else if (taskStatus.equals("RUNNING")) {
                 log.info("任务正在运行，请稍后查询");
-                Map<String, String> resultMap = new HashMap<>();
-                resultMap.put("status", "RUNNING");
-                resultMap.put("message", "任务正在运行，请稍后查询");
                 ////不存在则存入redis
                 if (!redisUtil.hasKey(taskId)){
                     //从线程中取出文件的原本名字
                     String fileName = taskContextMap.get("fileName");
                     redisUtil.add(taskId, fileName);
                 }
-                return objectMapper.writeValueAsString(resultMap);
 
             }else if (taskStatus.equals("FAILED")) {
                 log.info("任务失败");
-                Map<String, String> resultMap = new HashMap<>();
-                resultMap.put("status", "FAILED");
-                resultMap.put("message", "任务失败");
-                //清除该任务
-                redisUtil.delete(taskId);
-                return objectMapper.writeValueAsString(resultMap);
             }else if (taskStatus.equals("SUCCEEDED")) {
                 log.info("任务成功");
                 //解析返回数据，取出结果url
@@ -208,9 +196,6 @@ public class AliyunAsrServiceImpl implements AsrService {
 
 
 
-                    Map<String, String> resultMap00 = new HashMap<>();
-                    resultMap00.put("status", "SUCCEEDED");
-                    resultMap00.put("message", "任务成功，正在将文件喂给ai");
                     //清除该任务
                     redisUtil.delete(taskId);
 
@@ -222,24 +207,21 @@ public class AliyunAsrServiceImpl implements AsrService {
                     fileDto.setTaskId(taskId);
                     aiFeign.weiYangAi(fileDto, resourceId);
 
-                    return objectMapper.writeValueAsString(resultMap00);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }finally {
                     taskContextMap.clear();
                 }
+            }else {
+                log.info("任务状态未知");
             }
-            log.info("未知任务状态");
-            Map<String, String> resultMap0 = new HashMap<>();
-            resultMap0.put("status", "UNKNOW");
-            resultMap0.put("message", "未知任务状态");
-            resultMap0.put("data", result2);
-            return objectMapper.writeValueAsString(resultMap0);
         }
     }
 
+    @Override
+    public void task(String taskId) throws IOException {
 
-
+    }
 
 
 }

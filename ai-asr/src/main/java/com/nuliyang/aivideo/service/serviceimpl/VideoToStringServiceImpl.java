@@ -118,7 +118,6 @@ public class VideoToStringServiceImpl implements VideoToStringService {
             log.info("FFmpeg 音频转换成功: {}", outputWav.toAbsolutePath());
 
 
-
             ////////////////上传aliyunoss服务器/////////////////////
             // 将本地音频文件转换为 MultipartFile
             url = aliyunOssService.uploadFile(outputWav.toFile());
@@ -141,28 +140,31 @@ public class VideoToStringServiceImpl implements VideoToStringService {
 
         } finally {
             if (Files.exists(inputVideo)) {
-                try { Files.delete(inputVideo); } catch (IOException ignored) {}
+                try {
+                    Files.delete(inputVideo);
+                } catch (IOException ignored) {
+                }
             }
             if (Files.exists(outputWav)) {
-                try { Files.delete(outputWav); } catch (IOException ignored) {}
+                try {
+                    Files.delete(outputWav);
+                } catch (IOException ignored) {
+                }
             }
         }
 
 
         ///////////////asr处理音频/////////////////////////////
         try {
-            String result = null;
             String[] parts = url.split("/");
             String ossName = parts[parts.length - 1];
             url = ossSignedUrlUtil.generateSignedUrl(ossName);
             log.info("开始处理音频文件: {}", url);
-            result = asrService.asr(url);
-            return result;
+            asrService.asr(url);
+            return "处理成功，已添加到任务列表中";
         } catch (IOException e) {
             return "处理音频文件时发生错误: " + e.getMessage();
         }
-
-
 
 
     }
