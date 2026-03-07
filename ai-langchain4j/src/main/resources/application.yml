@@ -2,23 +2,27 @@ spring:
   application:
     name: ai-langchain4j
 
-  profiles:
-    active: local
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/aivideo?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:nuliyang}
+    password: ${SPRING_DATASOURCE_PASSWORD:nuliyang123!@#}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
 
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:prod}
 
   cloud:
     nacos:
       config:
-        server-addr: 127.0.0.1:8848
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
       discovery:
-        server-addr: 127.0.0.1:8848
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
 
   config:
     import:
-      - nacos:ai-video.yml
+      - nacos:${NACOS_CONFIG_DATA_ID:ai-langchain4j.yml}
+      - nacos:${NACOS_CONFIG_DATA_ID:common.yml}
 
 server:
-  port: 9432
-
-
-
+  port: ${SERVER_PORT:9432}

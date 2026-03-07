@@ -6,12 +6,14 @@ import com.nuliyang.aivideo.config.AliyunOssConfig;
 import com.nuliyang.aivideo.feign.AiFeign;
 import com.nuliyang.aivideo.tools.RedisUtil;
 import com.nuliyang.common.dto.FileDto;
+import com.nuliyang.common.entity.WeiYangAiTask;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -30,11 +32,11 @@ public class ProcessRedisTaskService {
 
     private final RedisUtil redisUtil;
 
+    private final RabbitTemplate rabbitTemplate;
+
     private final AliyunOssConfig ossProperties;
 
     private final ConcurrentHashMap<String, String> taskContextMap;
-
-    private final AiFeign aiFeign;
 
     private final ObjectMapper objectMapper;
 
@@ -105,7 +107,10 @@ public class ProcessRedisTaskService {
                     FileDto fileDto =new FileDto();
                     fileDto.setResultText(resultText);
                     fileDto.setTaskId(taskId);
-                    aiFeign.weiYangAi(fileDto, resourceId);
+                    //发到队列里面
+                    log.info("发送喂养ai任务到队列");
+                    WeiYangAiTask weiYangAiTask = new WeiYangAiTask(fileDto, resourceId);
+                    rabbitTemplate.convertAndSend("weiYangAiEx", "weiYangAiRoutingKey", weiYangAiTask);
 
                 } catch (IOException e) {
                     throw new RuntimeException(e);

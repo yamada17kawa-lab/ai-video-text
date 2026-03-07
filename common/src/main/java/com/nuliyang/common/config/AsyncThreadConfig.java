@@ -19,7 +19,7 @@ public class AsyncThreadConfig{
                 10,
                 60L,
                 TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(100),
+                new LinkedBlockingQueue<>(20),
                 new ThreadPoolExecutor.CallerRunsPolicy()
         );
     }

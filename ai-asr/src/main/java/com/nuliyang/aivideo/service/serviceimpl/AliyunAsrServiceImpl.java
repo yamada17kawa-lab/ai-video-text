@@ -8,8 +8,10 @@ import com.nuliyang.aivideo.service.AsrService;
 import com.nuliyang.aivideo.tools.RedisUtil;
 import com.nuliyang.common.dto.FileDto;
 
+import com.nuliyang.common.entity.WeiYangAiTask;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -51,6 +54,10 @@ public class AliyunAsrServiceImpl implements AsrService {
     private AiFeign aiFeign;
 
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+
 
 
     private static final String SUBMIT_URL =
@@ -67,9 +74,9 @@ public class AliyunAsrServiceImpl implements AsrService {
 
 
 
-    @Async("asyncThreadBean")
+
     @Override
-    public void asr(String wavFileUrl) throws IOException {
+    public CompletableFuture<Void> asr(String wavFileUrl) throws IOException {
 
         ///////////将音频扔给ai进行asr处理////////////////
         String jsonBody = """
@@ -205,7 +212,11 @@ public class AliyunAsrServiceImpl implements AsrService {
                     FileDto fileDto =new FileDto();
                     fileDto.setResultText(resultText);
                     fileDto.setTaskId(taskId);
-                    aiFeign.weiYangAi(fileDto, resourceId);
+                    //发到队列里面
+                    log.info("发送喂养ai任务到队列");
+                    WeiYangAiTask weiYangAiTask = new WeiYangAiTask(fileDto, resourceId);
+                    rabbitTemplate.convertAndSend("weiYangAiEx", "weiYangAiRoutingKey", weiYangAiTask);
+
 
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -216,6 +227,8 @@ public class AliyunAsrServiceImpl implements AsrService {
                 log.info("任务状态未知");
             }
         }
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        return future;
     }
 
     @Override

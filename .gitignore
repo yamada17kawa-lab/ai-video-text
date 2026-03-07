@@ -89,6 +89,8 @@ spring-boot-*.log
 **/application-local.properties
 **/application-dev.yml
 **/application-dev.properties
+**/application-prod.yml
+**/application-prod.properties
 **/application-*.yml.bak
 **/application-*.properties.bak
 

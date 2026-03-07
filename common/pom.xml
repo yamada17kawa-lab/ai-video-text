@@ -16,13 +16,33 @@
     <properties>
         <java.version>21</java.version>
         <lombok.version>1.18.32</lombok.version>
+        <spring-cloud.version>2023.0.3</spring-cloud.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
+        <!-- Spring Cloud Context - 支持 @RefreshScope -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-context</artifactId>
+        </dependency>
 
-
-
-
-
+        <!-- Actuator - 配置刷新端点（可选） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
 
         <!-- 数据库驱动 - 使用Spring Boot管理版本 -->
         <dependency>
@@ -56,6 +76,13 @@
             <version>3.0.3</version>
         </dependency>
 
+        <!-- RabbitMQ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+            <version>3.2.5</version>
+        </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -87,6 +114,14 @@
                 </configuration>
             </plugin>
 
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>  <!-- common 不是可执行模块，跳过重新打包 -->
+                    <classifier>exec</classifier>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

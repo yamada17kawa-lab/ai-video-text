@@ -2,28 +2,44 @@ spring:
   application:
     name: ai-asr
 
-  profiles:
-    active: local
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/aivideo?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:nuliyang}
+    password: ${SPRING_DATASOURCE_PASSWORD:nuliyang123!@#}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
 
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+      password: ${SPRING_REDIS_PASSWORD:}
+      database: ${SPRING_REDIS_DATABASE:0}
+      timeout: ${SPRING_REDIS_TIMEOUT:2000ms}
+      lettuce:
+        pool:
+          max-active: ${SPRING_REDIS_POOL_MAX_ACTIVE:8}
+          max-idle: ${SPRING_REDIS_POOL_MAX_IDLE:8}
+          min-idle: ${SPRING_REDIS_POOL_MIN_IDLE:0}
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:prod}
 
   servlet:
     multipart:
-        max-file-size: 50MB
-        max-request-size: 50MB
+      max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:50MB}
+      max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:50MB}
+
   cloud:
     nacos:
       config:
-        server-addr: 127.0.0.1:8848
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
       discovery:
-        server-addr: 127.0.0.1:8848
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+
   config:
     import:
-      - nacos:ai-asr.yml
-
-
+      - nacos:${NACOS_CONFIG_DATA_ID:ai-asr.yml}
+      - nacos:${NACOS_CONFIG_DATA_ID:common.yml}
 
 server:
-  port: 8432
-
-
-
+  port: ${SERVER_PORT:8432}

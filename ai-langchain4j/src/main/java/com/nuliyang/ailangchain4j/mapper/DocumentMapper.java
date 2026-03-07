@@ -10,7 +10,6 @@ public interface DocumentMapper {
 
 
 
-    //TODO 存储文档
     @Insert("insert into documenttable(id,resource_id,meta_data,text_words) values(#{id},#{resourceId},#{metaData},#{textWords})")
     void insertDocument(DocumentPo documentPo);
 
@@ -19,9 +18,6 @@ public interface DocumentMapper {
 
 
 
-    //TODO 获取文档
 
 
-
-    //TODO 删除文档
 }
